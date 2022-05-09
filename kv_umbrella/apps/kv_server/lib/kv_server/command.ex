@@ -44,6 +44,11 @@ defmodule KVServer.Command do
   """
   def run(command)
 
+  def run({:create, bucket}, pid) do
+    KV.Registry.create(pid, bucket)
+    {:ok, "OK\r\n"}
+  end
+
   def run({:create, bucket}) do
     KV.Registry.create(KV.Registry, bucket)
     {:ok, "OK\r\n"}
