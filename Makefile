@@ -23,5 +23,8 @@ foo_release:
 bar_release:
 	cd kv_umbrella && MIX_ENV=prod mix release bar
 
+os_config_init:
+	cd kv_umbrella && mix release.init
+
 clean:
 	$(RM) -rf kv_umbrella
