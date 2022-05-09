@@ -110,3 +110,11 @@ end
 
 ### Umbrella Project
 * Accessing internal dependencies
+
+
+### Requirements
+
+I’ve been planning to make it into something config-driven, where you just point it at a config file that specifies the same things the CLI args for the mix server task do: the set of jobs that should be run for each network but with much more opportunity for tuning
+
+Right now there’s a lot of config that’s burned into the various network-definition files (lib/ingestor/network/*.ex) despite it being specific to a particular RPC endpoint connection (i.e. the tuning would be different if we used a local node vs. if we used a public RPC provider) and those things would more properly live in a deploy-time config spec
+that could get passed in as a k8s ConfigMap, mounted as a file, and then the ingestor would discover that file at a known path (scout already does something similar with its containerization; there’s a config file that k8s writes to /app/release.properties that scout picks up on boot)

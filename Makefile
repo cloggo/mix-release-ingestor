@@ -14,5 +14,7 @@ init_server_app:
 test_sample:
 	cd kv_umbrella && mix test
 
+run_server:
+	cd kv_umbrella && PORT=4321 mix run --no-halt
 clean:
 	$(RM) -rf kv_umbrella
