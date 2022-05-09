@@ -16,5 +16,12 @@ test_sample:
 
 run_server:
 	cd kv_umbrella && PORT=4321 mix run --no-halt
+
+foo_release:
+	cd kv_umbrella && MIX_ENV=prod mix release foo
+
+bar_release:
+	cd kv_umbrella && MIX_ENV=prod mix release bar
+
 clean:
 	$(RM) -rf kv_umbrella
