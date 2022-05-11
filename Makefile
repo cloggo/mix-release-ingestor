@@ -3,6 +3,11 @@
 ingestor_build_image:
 	cd ingestor && mix docker.release
 
+ingestor_get_deps:
+	cd ingestor && mix deps.get
+
+ingestor_compile: ingestor_get_deps
+	cd ingestor && MIX_ENV=prod mix release
 
 init_sample_project:
 	mix new kv_umbrella --umbrella
@@ -25,6 +30,9 @@ bar_release:
 
 os_config_init:
 	cd kv_umbrella && mix release.init
+
+ingestor_os_config_init:
+	cd ingestor && mix release.init
 
 clean:
 	$(RM) -rf kv_umbrella

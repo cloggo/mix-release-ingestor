@@ -17,6 +17,8 @@ defmodule KV.Router do
     if elem(entry, 1) == node() do
       apply(mod, fun, args)
     else
+      # distributed task - a little bit different than supervised task
+      # {supervisor task name and node name}
       {KV.RouterTasks, elem(entry, 1)}
       |> Task.Supervisor.async(KV.Router, :route, [bucket, mod, fun, args])
       |> Task.await()

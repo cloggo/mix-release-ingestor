@@ -5,6 +5,11 @@ defmodule KV.Supervisor do
     Supervisor.start_link(__MODULE__, :ok, opts)
   end
 
+  # The Task module provides this functionality exactly.
+  # For example, it has a start_link/1 function that receives
+  # an anonymous function and executes it inside a
+  # new process that will be part of a supervision tree.
+
   @impl true
   def init(:ok) do
     children = [

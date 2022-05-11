@@ -103,6 +103,80 @@ end
   end
 ```
 
+### Processes
+
+Processes are isolated.
+If we want the failure in one process 
+to propagate to another one, 
+we should link them.
+
+Processes and links play an important role 
+when building fault-tolerant systems. 
+Elixir processes are isolated and don’t share 
+anything by default. Therefore, a failure in a 
+process will never crash or corrupt the state of another process. Links, however, allow processes to establish a relationship in case of failure. We often link our processes to supervisors which will detect when a process dies and start a new process in its place
+
+#### Tasks
+
+Tasks build on top of the spawn functions 
+to provide better error reports and introspection
+
+Instead of spawn/1 and spawn_link/1, we use 
+Task.start/1 and Task.start_link/1 
+which return {:ok, pid} rather than 
+just the PID. This is what enables tasks 
+to be used in supervision trees. 
+Furthermore, Task provides convenience 
+functions, like Task.async/1 and Task.await/1,
+and functionality to ease distribution.
+
+
+### State
+
+```elixir
+
+# example of how to create a state
+defmodule KV do
+  def start_link do
+    Task.start_link(fn -> loop(%{}) end)
+  end
+
+  defp loop(map) do
+    receive do
+      {:get, key, caller} ->
+        send caller, Map.get(map, key)
+        loop(map)
+      {:put, key, value} ->
+        loop(Map.put(map, key, value))
+    end
+  end
+end
+```
+
+It is also possible to register the pid, 
+giving it a name, and allowing everyone 
+that knows the name to send it messages:
+
+```elixir
+iex> Process.register(pid, :kv)
+true
+iex> send(:kv, {:get, :hello, self()})
+{:get, :hello, #PID<0.41.0>}
+iex> flush()
+:world
+:ok
+```
+
+#### Monitor or Links
+
+Links are bi-directional. If you link two processes 
+and one of them crashes, the other side will 
+crash too (unless it is trapping exits). 
+A monitor is uni-directional: only the 
+monitoring process will receive notifications 
+about the monitored one. In other words: use links 
+when you want linked crashes, and monitors when 
+you just want to be informed of crashes, exits, and so on.
 
 ### ETS (Erlang Term Storage)
 * how to use it as a cache mechanism

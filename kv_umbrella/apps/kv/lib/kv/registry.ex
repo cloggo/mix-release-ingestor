@@ -48,6 +48,7 @@ defmodule KV.Registry do
 
   # 4. The previous handle_call callback for lookup was removed
 
+  # call is synchronous
   @impl true
   def handle_call({:create, name}, _from, {names, refs}) do
     case lookup(names, name) do
@@ -62,6 +63,7 @@ defmodule KV.Registry do
     end
   end
 
+  # cast is asynchronous
   @impl true
   def handle_cast({:create, name}, {names, refs}) do
     # 5. Read and write to the ETS table instead of the map
@@ -77,6 +79,7 @@ defmodule KV.Registry do
     end
   end
 
+  #@impl true => intend to define a callback
   @impl true
   def handle_info({:DOWN, ref, :process, _pid, _reason}, {names, refs}) do
     # 6. Delete from the ETS table instead of the map
