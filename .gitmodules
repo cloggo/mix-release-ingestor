@@ -1,3 +1,6 @@
 [submodule "ingestor"]
 	path = ingestor
 	url = git@github.com:covalenthq/ingestor.git
+[submodule "gcp-ansible-demo/compute-video-demo-ansible"]
+	path = gcp-ansible-demo/compute-video-demo-ansible
+	url = https://github.com/GoogleCloudPlatform/compute-video-demo-ansible
