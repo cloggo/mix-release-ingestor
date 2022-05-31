@@ -13,3 +13,6 @@ build-image:
 
 build-multiarch-image:
 	docker buildx use builder && cd $(SRC) && docker buildx build --platform=linux/amd64,linux/arm64 --build-arg CONFIG_TAG=$(CONFIG_TAG) --build-arg NETWORK=$(NETWORK) . -t $(IMAGE_NAME):$(NETWORK)-$(CONFIG_TAG) -f ./observer/Dockerfile --push
+
+deploy:
+	cd elrond-ansible && ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible_hosts site.yml
