@@ -4,3 +4,6 @@
 [submodule "gcp-ansible-demo/compute-video-demo-ansible"]
 	path = gcp-ansible-demo/compute-video-demo-ansible
 	url = https://github.com/GoogleCloudPlatform/compute-video-demo-ansible
+[submodule "devnode/observing-squad"]
+	path = devnode/observing-squad
+	url = git@github.com:ElrondNetwork/observing-squad.git
