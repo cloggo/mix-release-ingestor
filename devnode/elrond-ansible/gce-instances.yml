@@ -1,5 +1,5 @@
 ---
-# compute-video-demo-ansible
+# elrond network instance
 - name: Create Compute Engine instances
   hosts: local
   gather_facts: False

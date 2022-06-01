@@ -1,6 +1,6 @@
 ---
 # Google Compute Engine required authentication global variables
 # (Replace 'YOUR_PROJECT_ID' with the Project ID used in creating your GCP project.)
-project: gcp-ansible-demo-351415
-credentials_file: ~/.gcp/serviceaccounts/gcp-ansible-demo-351415-8654c4df137a.json
+project: covalent-project
+credentials_file: ~/.gcp/serviceaccounts/covalent-project-8dde3ffcaf0f.json
 auth_kind: serviceaccount
