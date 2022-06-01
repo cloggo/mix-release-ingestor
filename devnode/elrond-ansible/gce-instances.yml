@@ -7,6 +7,8 @@
     - gce_vars/auth
     - gce_vars/machines
     - gce_vars/zone
+  vars:
+    shard_count: 4
   tasks:
     - name: Create an IP address for first instance
       gcp_compute_address:
@@ -22,14 +24,14 @@
         allowed:
           - ip_protocol: tcp
             ports:
-              - '8080-8083'
-              - '10000-10003'
-              - '20000-20003'
+              - "{{ '8080-' + (8080 + shard_count | int - 1) | string }}"
+              - "{{ '10000-' + (10000 + shard_count | int - 1) | string }}"
+              - "{{ '20000-' + (20000 + shard_count | int - 1) | string }}"
           - ip_protocol: udp
             ports:
-              - '8080-8083'
-              - '10000-10003'
-              - '20000-20003'
+              - "{{ '8080-' + (8080 + shard_count | int - 1) | string }}"
+              - "{{ '10000-' + (10000 + shard_count | int - 1) | string }}"
+              - "{{ '20000-' + (20000 + shard_count | int - 1) | string }}"
         target_tags:
           - elrond-observer-squad
         project: "{{ project }}"
