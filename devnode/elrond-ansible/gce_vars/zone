@@ -1,0 +1,5 @@
+---
+# Variables defined for us-central1-a
+name_zonea: test-elrond-v2
+zone: us-central1-f
+region: us-central1

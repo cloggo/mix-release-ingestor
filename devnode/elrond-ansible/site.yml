@@ -1,0 +1,5 @@
+---
+# compute-video-demo-ansible
+- import_playbook: gce-instances.yml
+- import_playbook: elrond.yml
+# - import_playbook: gce-lb.yml

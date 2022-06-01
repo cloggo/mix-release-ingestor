@@ -1,0 +1,84 @@
+---
+- name: Install aptitude
+  apt:
+    name: aptitude
+    state: latest
+    update_cache: true
+
+- name: Install required system packages
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-pip
+      - virtualenv
+      - python3-setuptools
+    state: latest
+    update_cache: true
+
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu focal stable
+    state: present
+
+- name: Update apt and install docker-ce
+  apt:
+    name: docker-ce
+    state: latest
+    update_cache: true
+
+- name: Install Docker Module for Python
+  pip:
+    name: docker
+
+- name: Create a ext4 filesystem on local ssd
+  filesystem:
+    fstype: ext4
+    dev: /dev/nvme0n{{ item }}
+    state: present
+  with_sequence: end={{ shard_count }} start=1
+
+- name: Mount disks
+  ansible.posix.mount:
+    path: "{{ shard_volume_prefix }}{{ item }}"
+    src: /dev/nvme0n{{ item }}
+    fstype: ext4
+    state: mounted
+  with_sequence: end={{ shard_count }} start=1
+
+- name: Generate Keys
+  docker_container:
+    name: elrond-key-generator
+    image: elrondnetwork/elrond-go-keygenerator:latest
+    auto_remove: yes
+    state: started
+    restart: no
+    working_dir: /keys
+    volumes:
+      - "{{ shard_volume_prefix }}{{ item }}/config:/keys"
+  with_sequence: end={{ shard_count }} start=1
+
+- name: Run whoami without become.
+  command: whoami
+  changed_when: false
+  become: false
+  register: whoami
+
+- name: Change key file ownership
+  ansible.builtin.file:
+    path: "{{ shard_volume_prefix }}{{ item }}/config/validatorKey.pem"
+    owner: "{{ whoami.stdout }}"
+  with_sequence: end={{ shard_count }} start=1
+
+- name: copy external.toml file
+  synchronize:
+    src: ../observing-squad/configs/external.toml
+    dest: "{{ shard_volume_prefix }}{{ item }}/config/"
+  with_sequence: end={{ shard_count }} start=1

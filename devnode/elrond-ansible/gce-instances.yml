@@ -1,0 +1,119 @@
+---
+# compute-video-demo-ansible
+- name: Create Compute Engine instances
+  hosts: local
+  gather_facts: False
+  vars_files:
+    - gce_vars/auth
+    - gce_vars/machines
+    - gce_vars/zone
+  tasks:
+    - name: Create an IP address for first instance
+      gcp_compute_address:
+        name: "{{ name_zonea }}-ip"
+        region: "{{ region }}"
+        project: "{{ project }}"
+        service_account_file: "{{ credentials_file }}"
+        auth_kind: "{{ auth_kind }}"
+      register: gcea_ip
+    - name: create a elrond-p2p firewall
+      google.cloud.gcp_compute_firewall:
+        name: elrond-p2p
+        allowed:
+          - ip_protocol: tcp
+            ports:
+              - '8080-8083'
+              - '10000-10003'
+              - '20000-20003'
+          - ip_protocol: udp
+            ports:
+              - '8080-8083'
+              - '10000-10003'
+              - '20000-20003'
+        target_tags:
+          - elrond-observer-squad
+        project: "{{ project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_file: "{{ credentials_file }}"
+        state: present
+    - name: create a http-server firewall
+      google.cloud.gcp_compute_firewall:
+        name: http-server
+        allowed:
+          - ip_protocol: tcp
+            ports:
+              - '80'
+              - '8000'
+        target_tags:
+          - http-server
+        project: "{{ project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_file: "{{ credentials_file }}"
+        state: present
+    - name: create a https-server firewall
+      google.cloud.gcp_compute_firewall:
+        name: https-server
+        allowed:
+          - ip_protocol: tcp
+            ports:
+              - '443'
+        target_tags:
+          - https-server
+        project: "{{ project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_file: "{{ credentials_file }}"
+        state: present
+    - name: elrond instance for first zone
+      gcp_compute_instance:
+        name: "{{ name_zonea }}"
+        machine_type: "{{ machine_type }}"
+        disks:
+          - auto_delete: true
+            boot: true
+            initialize_params:
+              source_image: "{{ image }}"
+          - auto_delete: 'true'
+            interface: NVME
+            type: SCRATCH
+            initialize_params:
+              disk_type: local-ssd
+              disk_size_gb: "{{ disk_size }}"
+          - auto_delete: 'true'
+            interface: NVME
+            type: SCRATCH
+            initialize_params:
+              disk_type: local-ssd
+              disk_size_gb: "{{ disk_size }}"
+          - auto_delete: 'true'
+            interface: NVME
+            type: SCRATCH
+            initialize_params:
+              disk_type: local-ssd
+              disk_size_gb: "{{ disk_size }}"
+          - auto_delete: 'true'
+            interface: NVME
+            type: SCRATCH
+            initialize_params:
+              disk_type: local-ssd
+              disk_size_gb: "{{ disk_size }}"
+        network_interfaces:
+          - access_configs:
+              - name: External NAT
+                nat_ip: "{{ gcea_ip }}"
+                type: ONE_TO_ONE_NAT
+        tags:
+          items:
+            - elrond-observer-squad
+            - http-server
+            - https-server
+        zone: "{{ zone }}"
+        project: "{{ project }}"
+        service_account_file: "{{ credentials_file }}"
+        auth_kind: "{{ auth_kind }}"
+      register: gcea
+
+  post_tasks:
+    - name: Wait for SSH for instances in first zone
+      wait_for: delay=1 host={{ gcea_ip.address }} port=22 state=started timeout=30
+    - name: Save host data for first zone
+      add_host: hostname={{ gcea_ip.address }} groupname=gce_instances_ips
