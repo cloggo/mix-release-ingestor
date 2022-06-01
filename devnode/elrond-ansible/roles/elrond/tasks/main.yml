@@ -47,7 +47,7 @@
 
 - name: Mount disks
   ansible.posix.mount:
-    path: "{{ shard_volume_prefix }}{{ item }}"
+    path: "{{ shard_volume_prefix }}{{ item | int - 1 }}"
     src: /dev/nvme0n{{ item }}
     fstype: ext4
     state: mounted
@@ -63,7 +63,7 @@
     working_dir: /keys
     volumes:
       - "{{ shard_volume_prefix }}{{ item }}/config:/keys"
-  with_sequence: end={{ shard_count }} start=1
+  with_sequence: end={{ shard_max }} start=0
 
 - name: Run whoami without become.
   command: whoami
@@ -75,10 +75,62 @@
   ansible.builtin.file:
     path: "{{ shard_volume_prefix }}{{ item }}/config/validatorKey.pem"
     owner: "{{ whoami.stdout }}"
-  with_sequence: end={{ shard_count }} start=1
+  with_sequence: end={{ shard_max }} start=0
 
 - name: copy external.toml file
   synchronize:
     src: ../observing-squad/covalent/configs/external.toml
     dest: "{{ shard_volume_prefix }}{{ item }}/config/"
-  with_sequence: end={{ shard_count }} start=1
+  with_sequence: end={{ shard_max }} start=0
+
+- name: Create elrond squad network
+  docker_network:
+    name: elrond-squad
+    ipam_config:
+      - subnet: "10.0.0.0/24"
+    state: present
+
+
+- name: Starting observers
+  docker_container:
+    name: "observer-{{ item }}"
+    image: covalenthq/elrond:devnet-D1.2.24.0-covalent1.0.3
+    command: --destination-shard-as-observer="{{ item }}" --validator-key-pem-file="/config/validatorKey.pem" --display-name="MyObservingSquad-{{ item }}" --config-external="/config/external.toml" --rest-api-interface :8080
+    state: started
+    restart: yes
+    networks:
+      - name: elrond-squad
+        ipv4_address: "{{ '10.0.0.' + (shard_count | int + 2 - item | int) | string }}"
+    ports:
+      - "{{ item | int + 8080 }}:8080"
+      - "{{ item | int + 10000 }}:37373"
+      - "{{ item | int + 20000 }}:21111"
+    env:
+      SHARD: "{{ item }}"
+    volumes:
+      - "{{ shard_volume_prefix }}{{ item }}/config:/config"
+      - "{{ shard_volume_prefix }}{{ item }}/db:/go/elrond-go/cmd/node/db"
+      - "{{ shard_volume_prefix }}{{ item }}/logs:/go/elrond-go/cmd/node/logs"
+  with_sequence: end={{ shard_max | int - 1}} start=0
+
+- name: Starting observer metachain
+  docker_container:
+    name: "observer-metachain"
+    image: covalenthq/elrond:devnet-D1.2.24.0-covalent1.0.3
+    command: --destination-shard-as-observer="metachain" --validator-key-pem-file="/config/validatorKey.pem" --display-name="MyObservingSquad-metachain" --config-external="/config/external.toml" --rest-api-interface :8080
+    state: started
+    restart: yes
+    networks:
+      - name: elrond-squad
+        ipv4_address: "{{ '10.0.0.' + (shard_count | int + 2 - shard_max | int) | string }}"
+    ports:
+      - "{{ shard_max | int + 8080 }}:8080"
+      - "{{ shard_max | int + 10000 }}:37373"
+      - "{{ shard_max | int + 20000 }}:21111"
+    env:
+      SHARD: "metachain"
+    volumes:
+      - "{{ shard_volume_prefix }}{{ shard_max }}/config:/config"
+      - "{{ shard_volume_prefix }}{{ shard_max }}/db:/go/elrond-go/cmd/node/db"
+      - "{{ shard_volume_prefix }}{{ shard_max }}/logs:/go/elrond-go/cmd/node/logs"
+
