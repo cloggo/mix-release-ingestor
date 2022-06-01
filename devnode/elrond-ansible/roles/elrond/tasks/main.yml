@@ -79,6 +79,6 @@
 
 - name: copy external.toml file
   synchronize:
-    src: ../observing-squad/configs/external.toml
+    src: ../observing-squad/covalent/configs/external.toml
     dest: "{{ shard_volume_prefix }}{{ item }}/config/"
   with_sequence: end={{ shard_count }} start=1
