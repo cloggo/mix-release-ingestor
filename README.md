@@ -1,4 +1,4 @@
-# Elixir Lang Review
+# Elixir Review
 
 ## Erlang/OTP
 * Erlang is a functional programming language
